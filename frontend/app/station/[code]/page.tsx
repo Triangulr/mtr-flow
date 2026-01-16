@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Train,
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Calendar,
   AlertTriangle,
+  Moon,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -28,8 +29,10 @@ import {
 } from 'recharts';
 import { stationsApi, flowDataApi, predictionsApi, type Prediction } from '@/lib/api';
 import { useTrainArrivals } from '@/hooks/use-train-arrivals';
+import { useMTRStatus } from '@/hooks/use-mtr-status';
 import { GridBackground } from '@/components/effects/grid-background';
 import { Header } from '@/components/dashboard/header';
+import { ServiceStatusBanner } from '@/components/dashboard/service-status-banner';
 import { CrowdingBadge } from '@/components/dashboard/crowding-badge';
 import { LiveIndicator } from '@/components/dashboard/live-indicator';
 import { cn, formatHKTime } from '@/lib/utils';
@@ -67,6 +70,7 @@ export default function StationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const stationCode = params.code as string;
+  const { isClosed } = useMTRStatus();
 
   // Fetch all stations for name lookup
   const { data: allStations } = useQuery({
@@ -229,6 +233,10 @@ export default function StationDetailPage() {
     <div className="min-h-screen">
       <GridBackground />
       <Header />
+      
+      <AnimatePresence>
+        {isClosed && <ServiceStatusBanner />}
+      </AnimatePresence>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
@@ -304,36 +312,85 @@ export default function StationDetailPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 mt-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span className="font-mono">{station.code}</span>
-                    </div>
-                    <LiveIndicator />
-                  </div>
-                </div>
+                                      <div className="flex items-center gap-4 mt-4">
 
-                {/* Current Status */}
-                <div className="flex flex-col items-start md:items-end gap-4">
-                  {flowData?.is_delay && (
-                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm font-bold">Service Delay</span>
-                    </div>
-                  )}
-                  {flowData?.crowding_level && (
-                    <CrowdingBadge level={flowData.crowding_level} size="lg" />
-                  )}
-                  <motion.button
-                    onClick={() => refetchFlow()}
-                    className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Refresh Data
-                  </motion.button>
-                </div>
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+
+                                        <MapPin className="w-4 h-4" />
+
+                                        <span className="font-mono">{station.code}</span>
+
+                                      </div>
+
+                                      {!isClosed && <LiveIndicator />}
+
+                                    </div>
+
+                                  </div>
+
+                  
+
+                                  {/* Current Status */}
+
+                                  <div className="flex flex-col items-start md:items-end gap-4">
+
+                                    {isClosed ? (
+
+                                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/50 text-slate-400 border border-slate-700/50">
+
+                                        <Moon className="w-4 h-4" />
+
+                                        <span className="text-sm font-bold">Service Inactive</span>
+
+                                      </div>
+
+                                    ) : (
+
+                                      <>
+
+                                        {flowData?.is_delay && (
+
+                                          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+
+                                            <AlertTriangle className="w-4 h-4" />
+
+                                            <span className="text-sm font-bold">Service Delay</span>
+
+                                          </div>
+
+                                        )}
+
+                                        {flowData?.crowding_level && (
+
+                                          <CrowdingBadge level={flowData.crowding_level} size="lg" />
+
+                                        )}
+
+                                        <motion.button
+
+                                          onClick={() => refetchFlow()}
+
+                                          className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+
+                                          whileHover={{ scale: 1.02 }}
+
+                                          whileTap={{ scale: 0.98 }}
+
+                                        >
+
+                                          <RefreshCw className="w-4 h-4" />
+
+                                          Refresh Data
+
+                                        </motion.button>
+
+                                      </>
+
+                                    )}
+
+                                  </div>
+
+                  
               </div>
 
               {/* Quick Stats */}
@@ -345,7 +402,9 @@ export default function StationDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Train Frequency</p>
                     <p className="text-lg font-bold text-foreground">
-                      {flowData?.train_frequency?.toFixed(1) || '--'}{' '}
+                      {!isClosed && flowData?.train_frequency
+                        ? flowData.train_frequency.toFixed(1)
+                        : '--'}{' '}
                       <span className="text-xs font-normal text-muted-foreground">
                         min
                       </span>
@@ -360,7 +419,7 @@ export default function StationDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Last Updated</p>
                     <p className="text-lg font-bold text-foreground">
-                      {flowData?.timestamp
+                      {!isClosed && flowData?.timestamp
                         ? formatHKTime(flowData.timestamp)
                         : '--'}
                     </p>
@@ -374,7 +433,7 @@ export default function StationDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Data Points</p>
                     <p className="text-lg font-bold text-foreground">
-                      {historicalData?.length || 0}
+                      {!isClosed ? historicalData?.length || 0 : 0}
                     </p>
                   </div>
                 </div>
@@ -386,7 +445,7 @@ export default function StationDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Predictions</p>
                     <p className="text-lg font-bold text-foreground">
-                      24h forecast
+                      {isClosed ? 'Paused' : '24h forecast'}
                     </p>
                   </div>
                 </div>
@@ -410,144 +469,158 @@ export default function StationDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Train className="w-5 h-5 text-muted-foreground" />
-                  <LiveIndicator />
+                  {!isClosed && <LiveIndicator />}
                 </div>
               </div>
 
-              {trainsLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex items-center gap-3">
-                    <RefreshCw className="w-5 h-5 animate-spin text-primary" />
-                    <span className="text-muted-foreground">Loading train schedules...</span>
+              {isClosed ? (
+                <div className="py-12 text-center">
+                  <div className="inline-flex items-center justify-center p-4 rounded-full bg-slate-800/50 mb-4">
+                    <Moon className="w-8 h-8 text-slate-400" />
                   </div>
+                  <h4 className="text-lg font-bold text-foreground mb-2">Service Inactive</h4>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    MTR services are currently closed. Real-time arrival data will resume at 06:00.
+                  </p>
                 </div>
-              )}
-
-              {trainsError && (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground">Unable to load train arrival data</p>
-                </div>
-              )}
-
-              {trainsData && trainsData.lines && trainsData.lines.length > 0 && (
-                <div className="space-y-6">
-                  {trainsData.lines.map((line) => (
-                    <div key={line.line_code} className="space-y-4">
-                      {/* Line Header */}
+              ) : (
+                <>
+                  {trainsLoading && (
+                    <div className="flex items-center justify-center py-12">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: line.color }}
-                        />
-                        <span className="text-base font-bold text-foreground">
-                          {line.line_name}
-                        </span>
+                        <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                        <span className="text-muted-foreground">Loading train schedules...</span>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* UP Trains */}
-                        {line.up_trains && line.up_trains.length > 0 && (
-                          <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="text-xs text-slate-400 uppercase tracking-wide font-semibold">
-                                Upward
-                              </div>
-                              {line.frequency_up && (
-                                <span className="text-xs font-mono text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                                  Freq: {line.frequency_up.toFixed(1)}m
-                                </span>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              {line.up_trains.map((train, idx) => (
-                                <div
-                                  key={`up-${idx}`}
-                                  className="flex items-center justify-between"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-sm text-slate-400">
-                                      Plat {train.platform}
-                                    </span>
-                                    <span className="text-slate-500">→</span>
-                                    <span className="text-sm text-slate-200 font-medium">
-                                      {getStationName(train.destination_code)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-primary font-semibold">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="text-base">{train.ttnt} min</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* DOWN Trains */}
-                        {line.down_trains && line.down_trains.length > 0 && (
-                          <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="text-xs text-slate-400 uppercase tracking-wide font-semibold">
-                                Downward
-                              </div>
-                              {line.frequency_down && (
-                                <span className="text-xs font-mono text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                                  Freq: {line.frequency_down.toFixed(1)}m
-                                </span>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              {line.down_trains.map((train, idx) => (
-                                <div
-                                  key={`down-${idx}`}
-                                  className="flex items-center justify-between"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-sm text-slate-400">
-                                      Plat {train.platform}
-                                    </span>
-                                    <span className="text-slate-500">→</span>
-                                    <span className="text-sm text-slate-200 font-medium">
-                                      {getStationName(train.destination_code)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-primary font-semibold">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="text-base">{train.ttnt} min</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* No trains message */}
-                      {(!line.up_trains || line.up_trains.length === 0) &&
-                        (!line.down_trains || line.down_trains.length === 0) && (
-                          <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700/30">
-                            <p className="text-sm text-slate-500 italic text-center">
-                              No trains scheduled
-                            </p>
-                          </div>
-                        )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {trainsData && (!trainsData.lines || trainsData.lines.length === 0) && (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground">No train data available</p>
-                </div>
-              )}
+                  {trainsError && (
+                    <div className="py-8 text-center">
+                      <p className="text-sm text-muted-foreground">Unable to load train arrival data</p>
+                    </div>
+                  )}
 
-              {/* Timestamp */}
-              {trainsData && trainsData.timestamp && (
-                <div className="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-center gap-2 text-xs text-slate-500">
-                  <Clock className="w-3 h-3" />
-                  <span>Updated: {new Date(trainsData.timestamp).toLocaleTimeString()}</span>
-                </div>
+                  {trainsData && trainsData.lines && trainsData.lines.length > 0 && (
+                    <div className="space-y-6">
+                      {trainsData.lines.map((line) => (
+                        <div key={line.line_code} className="space-y-4">
+                          {/* Line Header */}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: line.color }}
+                            />
+                            <span className="text-base font-bold text-foreground">
+                              {line.line_name}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* UP Trains */}
+                            {line.up_trains && line.up_trains.length > 0 && (
+                              <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="text-xs text-slate-400 uppercase tracking-wide font-semibold">
+                                    Upward
+                                  </div>
+                                  {line.frequency_up && (
+                                    <span className="text-xs font-mono text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                                      Freq: {line.frequency_up.toFixed(1)}m
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  {line.up_trains.map((train, idx) => (
+                                    <div
+                                      key={`up-${idx}`}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm text-slate-400">
+                                          Plat {train.platform}
+                                        </span>
+                                        <span className="text-slate-500">→</span>
+                                        <span className="text-sm text-slate-200 font-medium">
+                                          {getStationName(train.destination_code)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-primary font-semibold">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="text-base">{train.ttnt} min</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* DOWN Trains */}
+                            {line.down_trains && line.down_trains.length > 0 && (
+                              <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="text-xs text-slate-400 uppercase tracking-wide font-semibold">
+                                    Downward
+                                  </div>
+                                  {line.frequency_down && (
+                                    <span className="text-xs font-mono text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                                      Freq: {line.frequency_down.toFixed(1)}m
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  {line.down_trains.map((train, idx) => (
+                                    <div
+                                      key={`down-${idx}`}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm text-slate-400">
+                                          Plat {train.platform}
+                                        </span>
+                                        <span className="text-slate-500">→</span>
+                                        <span className="text-sm text-slate-200 font-medium">
+                                          {getStationName(train.destination_code)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-primary font-semibold">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="text-base">{train.ttnt} min</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* No trains message */}
+                          {(!line.up_trains || line.up_trains.length === 0) &&
+                            (!line.down_trains || line.down_trains.length === 0) && (
+                              <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                                <p className="text-sm text-slate-500 italic text-center">
+                                  No trains scheduled
+                                </p>
+                              </div>
+                            )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {trainsData && (!trainsData.lines || trainsData.lines.length === 0) && (
+                    <div className="py-8 text-center">
+                      <p className="text-sm text-muted-foreground">No train data available</p>
+                    </div>
+                  )}
+
+                  {/* Timestamp */}
+                  {trainsData && trainsData.timestamp && (
+                    <div className="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-center gap-2 text-xs text-slate-500">
+                      <Clock className="w-3 h-3" />
+                      <span>Updated: {new Date(trainsData.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
 
