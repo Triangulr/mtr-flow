@@ -7,6 +7,7 @@ A comprehensive system for monitoring and predicting crowd levels across Hong Ko
 ## Features
 
 - **Real-Time Monitoring**: Live tracking of train arrivals and station crowding levels
+- **Service Hours**: Automated 1 AM - 6 AM inactive state handling (HK Time)
 - **24-Hour Predictions**: ML-powered forecasting of crowding patterns *(in progress)*
 - **Interactive Map**: Visualize the entire MTR network with real-time status updates
 - **Station Analytics**: Detailed crowding trends and historical data for each station

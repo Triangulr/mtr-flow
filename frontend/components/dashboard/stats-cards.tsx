@@ -8,12 +8,15 @@ import type { Station, FlowData } from '@/lib/api';
 interface StatsCardsProps {
   stations: Station[];
   flowDataMap: Map<string, FlowData | null>;
+  isServiceClosed?: boolean;
 }
 
-export function StatsCards({ stations, flowDataMap }: StatsCardsProps) {
+export function StatsCards({ stations, flowDataMap, isServiceClosed = false }: StatsCardsProps) {
   // Calculate stats
   const totalStations = stations.length;
-  const stationsWithData = Array.from(flowDataMap.values()).filter(Boolean).length;
+  
+  // If service is closed, reset stats
+  const stationsWithData = isServiceClosed ? 0 : Array.from(flowDataMap.values()).filter(Boolean).length;
 
   const crowdingCounts = {
     low: 0,
@@ -24,17 +27,21 @@ export function StatsCards({ stations, flowDataMap }: StatsCardsProps) {
   let totalFrequency = 0;
   let frequencyCount = 0;
 
-  flowDataMap.forEach((flow) => {
-    if (flow?.crowding_level) {
-      crowdingCounts[flow.crowding_level]++;
-    }
-    if (flow?.train_frequency) {
-      totalFrequency += flow.train_frequency;
-      frequencyCount++;
-    }
-  });
+  if (!isServiceClosed) {
+    flowDataMap.forEach((flow) => {
+      if (flow?.crowding_level) {
+        crowdingCounts[flow.crowding_level]++;
+      }
+      if (flow?.train_frequency) {
+        totalFrequency += flow.train_frequency;
+        frequencyCount++;
+      }
+    });
+  }
 
-  const avgFrequency = frequencyCount > 0 ? (totalFrequency / frequencyCount).toFixed(1) : '--';
+  const avgFrequency = !isServiceClosed && frequencyCount > 0 
+    ? (totalFrequency / frequencyCount).toFixed(1) 
+    : '--';
 
   const stats = [
     {

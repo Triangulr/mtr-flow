@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, RefreshCw, AlertCircle } from 'lucide-react';
 import { stationsApi, flowDataApi, type FlowData } from '@/lib/api';
 import { Header } from '@/components/dashboard/header';
@@ -10,11 +10,14 @@ import { StationCard } from '@/components/station/station-card';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { LineFilter } from '@/components/dashboard/line-filter';
 import { CrowdingOverview } from '@/components/dashboard/crowding-overview';
+import { ServiceStatusBanner } from '@/components/dashboard/service-status-banner';
+import { useMTRStatus } from '@/hooks/use-mtr-status';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isClosed } = useMTRStatus();
 
   // Fetch all stations
   const {
@@ -77,6 +80,11 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <Header />
+      
+      {/* Service Status Banner */}
+      <AnimatePresence>
+        {isClosed && <ServiceStatusBanner />}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -102,7 +110,11 @@ export default function Dashboard() {
             transition={{ delay: 0.1 }}
             className="mb-10"
           >
-            <StatsCards stations={stations} flowDataMap={flowDataMap} />
+            <StatsCards 
+              stations={stations} 
+              flowDataMap={flowDataMap} 
+              isServiceClosed={isClosed}
+            />
           </motion.div>
         )}
 
@@ -208,6 +220,7 @@ export default function Dashboard() {
                     key={station.id} 
                     station={station} 
                     flowData={flowDataMap?.get(station.code)} 
+                    isServiceClosed={isClosed}
                   />
                 ))}
               </div>
@@ -249,7 +262,10 @@ export default function Dashboard() {
           {/* Sidebar - Overview */}
           <div className="lg:col-span-1 space-y-6">
             {flowDataMap && (
-              <CrowdingOverview flowDataMap={flowDataMap} />
+              <CrowdingOverview 
+                flowDataMap={flowDataMap} 
+                isServiceClosed={isClosed}
+              />
             )}
 
             {/* Quick Info Card */}

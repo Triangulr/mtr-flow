@@ -15,6 +15,7 @@ import type { FlowData } from '@/lib/api';
 interface CrowdingOverviewProps {
   flowDataMap: Map<string, FlowData | null>;
   className?: string;
+  isServiceClosed?: boolean;
 }
 
 const COLORS = {
@@ -24,7 +25,7 @@ const COLORS = {
   unknown: 'hsl(220 14% 90%)', // Light Gray
 };
 
-export function CrowdingOverview({ flowDataMap, className }: CrowdingOverviewProps) {
+export function CrowdingOverview({ flowDataMap, className, isServiceClosed = false }: CrowdingOverviewProps) {
   // Calculate crowding distribution
   const distribution = {
     low: 0,
@@ -33,13 +34,17 @@ export function CrowdingOverview({ flowDataMap, className }: CrowdingOverviewPro
     unknown: 0,
   };
 
-  flowDataMap.forEach((flow) => {
-    if (flow?.crowding_level) {
-      distribution[flow.crowding_level]++;
-    } else {
-      distribution.unknown++;
-    }
-  });
+  if (isServiceClosed) {
+    distribution.unknown = flowDataMap.size;
+  } else {
+    flowDataMap.forEach((flow) => {
+      if (flow?.crowding_level) {
+        distribution[flow.crowding_level]++;
+      } else {
+        distribution.unknown++;
+      }
+    });
+  }
 
   const data = [
     { name: 'Low', value: distribution.low, color: COLORS.low },

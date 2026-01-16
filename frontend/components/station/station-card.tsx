@@ -11,6 +11,7 @@ interface StationCardProps {
   station: Station;
   flowData?: FlowData | null;
   className?: string;
+  isServiceClosed?: boolean;
 }
 
 const lineStyles: Record<string, { badge: string; border: string }> = {
@@ -26,7 +27,7 @@ const lineStyles: Record<string, { badge: string; border: string }> = {
   'Disneyland Resort Line': { badge: 'bg-mtr-disneyland text-white', border: 'border-mtr-disneyland' },
 };
 
-export function StationCard({ station, flowData, className }: StationCardProps) {
+export function StationCard({ station, flowData, className, isServiceClosed = false }: StationCardProps) {
   const styles = lineStyles[station.line] || {
     badge: 'bg-primary text-primary-foreground',
     border: 'border-primary',
@@ -60,12 +61,12 @@ export function StationCard({ station, flowData, className }: StationCardProps) 
               <p className="text-sm text-muted-foreground font-mono">{station.code}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              {flowData?.is_delay && (
+              {!isServiceClosed && flowData?.is_delay && (
                 <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">
                   DELAYED
                 </span>
               )}
-              {flowData?.crowding_level && (
+              {!isServiceClosed && flowData?.crowding_level && (
                 <CrowdingBadge level={flowData.crowding_level} />
               )}
             </div>
@@ -80,7 +81,7 @@ export function StationCard({ station, flowData, className }: StationCardProps) 
               <div>
                 <p className="text-xs text-muted-foreground">Frequency</p>
                 <p className="font-semibold text-foreground">
-                  {flowData?.train_frequency 
+                  {!isServiceClosed && flowData?.train_frequency 
                     ? `${flowData.train_frequency.toFixed(1)} min`
                     : '--'}
                 </p>
@@ -94,7 +95,7 @@ export function StationCard({ station, flowData, className }: StationCardProps) 
               <div>
                 <p className="text-xs text-muted-foreground">Flow</p>
                 <p className="font-semibold text-foreground">
-                  {flowData ? 'Active' : '--'}
+                  {!isServiceClosed && flowData ? 'Active' : isServiceClosed ? 'Inactive' : '--'}
                 </p>
               </div>
             </div>
