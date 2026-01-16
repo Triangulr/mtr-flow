@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Clean Minimalist MTR Theme */
+@layer base {
+  :root {
+    /* Clean White Background */
+    --background: 0 0% 98%;
+    --foreground: 220 20% 20%;
+
+    /* Cards - White with subtle border/shadow */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    /* Primary: MTR Blue */
+    --primary: 210 100% 40%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary: Light Gray */
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 20% 20%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 45%;
+
+    /* Accent: MTR Red */
+    --accent: 354 70% 50%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 210 100% 40%;
+
+    /* Crowding levels - Traffic Light (Pastel/Modern) */
+    --crowding-low: 150 60% 45%;    /* Emerald */
+    --crowding-medium: 35 90% 50%;  /* Amber */
+    --crowding-high: 0 75% 55%;     /* Red */
+
+    /* Chart colors */
+    --chart-1: 210 100% 40%;
+    --chart-2: 354 70% 50%;
+    --chart-3: 150 60% 45%;
+    --chart-4: 35 90% 50%;
+    --chart-5: 270 60% 60%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Modern Dark Theme (Not Cyberpunk) */
+    --background: 220 20% 10%;
+    --foreground: 220 10% 90%;
+
+    --card: 220 20% 12%;
+    --card-foreground: 220 10% 90%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 220 10% 90%;
+
+    --primary: 210 100% 50%;
+    --primary-foreground: 220 20% 10%;
+
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 220 10% 90%;
+
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 354 70% 50%;
+    --accent-foreground: 220 10% 90%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 220 10% 90%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 210 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom component overrides */
+@layer components {
+  .glass-card {
+    @apply bg-card text-card-foreground border border-border shadow-sm;
+  }
+  
+  /* Retain the class name for compatibility but change styling */
+  .station-card {
+    @apply bg-card rounded-xl p-5 border border-border transition-all duration-200;
+    @apply hover:shadow-md hover:border-primary/30;
+  }
+
+  .crowding-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold tracking-wide border;
+  }
+
+  .crowding-low {
+    @apply bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800/50;
+  }
+
+  .crowding-medium {
+    @apply bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800/50;
+  }
+
+  .crowding-high {
+    @apply bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800/50;
+  }
+
+  .nav-link {
+    @apply px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted;
+  }
+
+  .nav-link.active {
+    @apply bg-primary/10 text-primary;
+  }
+}

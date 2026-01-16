@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+pydantic-settings
+python-dotenv
+# AI libraries - temporarily commented out
+# scikit-learn
+# pandas
+# numpy
+requests
+python-multipart
+supabase

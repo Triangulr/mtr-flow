@@ -1,0 +1,209 @@
+{
+  "name": "MTR Flow Data Collection",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "seconds": 30
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// All stations from official MTR CSV\nconst stations = [\n  // AEL\n  { line: 'AEL', station: 'AWE' },\n  { line: 'AEL', station: 'AIR' },\n  { line: 'AEL', station: 'TSY' },\n  { line: 'AEL', station: 'KOW' },\n  { line: 'AEL', station: 'HOK' },\n  // DRL\n  { line: 'DRL', station: 'SUN' },\n  { line: 'DRL', station: 'DIS' },\n  // EAL\n  { line: 'EAL', station: 'LOW' },\n  { line: 'EAL', station: 'SHS' },\n  { line: 'EAL', station: 'FAN' },\n  { line: 'EAL', station: 'TWO' },\n  { line: 'EAL', station: 'TAP' },\n  { line: 'EAL', station: 'UNI' },\n  { line: 'EAL', station: 'FOT' },\n  { line: 'EAL', station: 'SHT' },\n  { line: 'EAL', station: 'TAW' },\n  { line: 'EAL', station: 'KOT' },\n  { line: 'EAL', station: 'MKK' },\n  { line: 'EAL', station: 'HUH' },\n  { line: 'EAL', station: 'EXC' },\n  { line: 'EAL', station: 'ADM' },\n  { line: 'EAL', station: 'LMC' },\n  // ISL\n  { line: 'ISL', station: 'CHW' },\n  { line: 'ISL', station: 'HFC' },\n  { line: 'ISL', station: 'SKW' },\n  { line: 'ISL', station: 'SWH' },\n  { line: 'ISL', station: 'TAK' },\n  { line: 'ISL', station: 'QUB' },\n  { line: 'ISL', station: 'NOP' },\n  { line: 'ISL', station: 'FOH' },\n  { line: 'ISL', station: 'TIH' },\n  { line: 'ISL', station: 'CAB' },\n  { line: 'ISL', station: 'WAC' },\n  { line: 'ISL', station: 'ADM' },\n  { line: 'ISL', station: 'CEN' },\n  { line: 'ISL', station: 'SHW' },\n  { line: 'ISL', station: 'SYP' },\n  { line: 'ISL', station: 'HKU' },\n  { line: 'ISL', station: 'KET' },\n  // KTL\n  { line: 'KTL', station: 'TIK' },\n  { line: 'KTL', station: 'YAT' },\n  { line: 'KTL', station: 'LAT' },\n  { line: 'KTL', station: 'KWT' },\n  { line: 'KTL', station: 'NTK' },\n  { line: 'KTL', station: 'KOB' },\n  { line: 'KTL', station: 'CHH' },\n  { line: 'KTL', station: 'DIH' },\n  { line: 'KTL', station: 'WTS' },\n  { line: 'KTL', station: 'LOF' },\n  { line: 'KTL', station: 'KOT' },\n  { line: 'KTL', station: 'SKM' },\n  { line: 'KTL', station: 'PRE' },\n  { line: 'KTL', station: 'MOK' },\n  { line: 'KTL', station: 'YMT' },\n  { line: 'KTL', station: 'HOM' },\n  { line: 'KTL', station: 'WHA' },\n  // TML\n  { line: 'TML', station: 'WKS' },\n  { line: 'TML', station: 'MOS' },\n  { line: 'TML', station: 'HEO' },\n  { line: 'TML', station: 'TSH' },\n  { line: 'TML', station: 'SHM' },\n  { line: 'TML', station: 'CIO' },\n  { line: 'TML', station: 'STW' },\n  { line: 'TML', station: 'CKT' },\n  { line: 'TML', station: 'TAW' },\n  { line: 'TML', station: 'HIK' },\n  { line: 'TML', station: 'DIH' },\n  { line: 'TML', station: 'KAT' },\n  { line: 'TML', station: 'SUW' },\n  { line: 'TML', station: 'TKW' },\n  { line: 'TML', station: 'HOM' },\n  { line: 'TML', station: 'HUH' },\n  { line: 'TML', station: 'ETS' },\n  { line: 'TML', station: 'AUS' },\n  { line: 'TML', station: 'NAC' },\n  { line: 'TML', station: 'MEF' },\n  { line: 'TML', station: 'TWW' },\n  { line: 'TML', station: 'KSR' },\n  { line: 'TML', station: 'YUL' },\n  { line: 'TML', station: 'LOP' },\n  { line: 'TML', station: 'TIS' },\n  { line: 'TML', station: 'SIH' },\n  { line: 'TML', station: 'TUM' },\n  // TCL\n  { line: 'TCL', station: 'TUC' },\n  { line: 'TCL', station: 'SUN' },\n  { line: 'TCL', station: 'TSY' },\n  { line: 'TCL', station: 'LAK' },\n  { line: 'TCL', station: 'NAC' },\n  { line: 'TCL', station: 'OLY' },\n  { line: 'TCL', station: 'KOW' },\n  { line: 'TCL', station: 'HOK' },\n  // TKL\n  { line: 'TKL', station: 'POA' },\n  { line: 'TKL', station: 'HAH' },\n  { line: 'TKL', station: 'TKO' },\n  { line: 'TKL', station: 'TIK' },\n  { line: 'TKL', station: 'YAT' },\n  { line: 'TKL', station: 'QUB' },\n  { line: 'TKL', station: 'NOP' },\n  { line: 'TKL', station: 'LHP' },\n  // TWL\n  { line: 'TWL', station: 'TSW' },\n  { line: 'TWL', station: 'TWH' },\n  { line: 'TWL', station: 'KWH' },\n  { line: 'TWL', station: 'KWF' },\n  { line: 'TWL', station: 'LAK' },\n  { line: 'TWL', station: 'MEF' },\n  { line: 'TWL', station: 'LCK' },\n  { line: 'TWL', station: 'CSW' },\n  { line: 'TWL', station: 'SSP' },\n  { line: 'TWL', station: 'PRE' },\n  { line: 'TWL', station: 'MOK' },\n  { line: 'TWL', station: 'YMT' },\n  { line: 'TWL', station: 'JOR' },\n  { line: 'TWL', station: 'TST' },\n  { line: 'TWL', station: 'ADM' },\n  { line: 'TWL', station: 'CEN' },\n  // SIL\n  { line: 'SIL', station: 'ADM' },\n  { line: 'SIL', station: 'OCP' },\n  { line: 'SIL', station: 'WCH' },\n  { line: 'SIL', station: 'LET' },\n  { line: 'SIL', station: 'SOH' },\n];\n\nreturn stations.map(s => ({ json: s }));"
+      },
+      "name": "Define Stations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "id": "define-stations"
+    },
+    {
+      "parameters": {
+        "url": "=https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line={{$json.line}}&sta={{$json.station}}",
+        "options": {
+          "timeout": 10000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "MTR API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        650,
+        300
+      ],
+      "id": "mtr-api",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process MTR API response\nconst results = [];\n\n// Helper function to calculate headway from trains\nfunction calculateHeadway(trains) {\n  if (!trains || trains.length === 0) return null;\n  \n  // Build seq -> ttnt mapping for valid trains\n  const seqMap = {};\n  for (const t of trains) {\n    if (t.valid === 'Y' && t.seq && t.ttnt) {\n      const seqNum = parseInt(t.seq);\n      const ttntVal = parseFloat(t.ttnt);\n      if (!isNaN(seqNum) && !isNaN(ttntVal)) {\n        seqMap[seqNum] = ttntVal;\n      }\n    }\n  }\n  \n  // Prefer seq 3 - seq 2 (most consistent headway)\n  if (seqMap[3] !== undefined && seqMap[2] !== undefined) {\n    return Math.abs(seqMap[3] - seqMap[2]);\n  }\n  \n  // Fallback to seq 2 - seq 1\n  if (seqMap[2] !== undefined && seqMap[1] !== undefined) {\n    return Math.abs(seqMap[2] - seqMap[1]);\n  }\n  \n  return null;\n}\n\nfunction determineCrowding(frequency, hour, isDelay) {\n  const isRushHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);\n  \n  // Delay Override\n  if (isDelay) return isRushHour ? 'high' : 'medium';\n  \n  if (isRushHour) {\n    if (frequency < 2.5) return 'high';\n    if (frequency < 4.0) return 'medium';\n    return 'low';\n  } else {\n    if (frequency < 3.0) return 'medium';\n    return 'low';\n  }\n}\n\n// Iterate over ALL input items (responses from API)\nfor (const item of $input.all()) {\n  try {\n    const apiResponse = item.json;\n\n    // Check if API call failed\n    if (!apiResponse || !apiResponse.data) {\n      continue;\n    }\n\n    const isDelay = apiResponse.isdelay === 'Y';\n    const sysTimeStr = apiResponse.sys_time;\n    \n    if (!sysTimeStr) continue;\n\n    const data = apiResponse.data;\n    const stationKeys = Object.keys(data);\n    \n    if (stationKeys.length === 0) {\n      continue;\n    }\n    \n    // Usually only one station key per request\n    const stationKey = stationKeys[0]; \n    const lineCode = stationKey.split('-')[0];\n    const stationCode = stationKey.split('-')[1];\n\n    const trainData = data[stationKey];\n    if (!trainData) continue;\n    \n    const upTrains = trainData.UP || [];\n    const downTrains = trainData.DOWN || [];\n    const allTrains = [...upTrains, ...downTrains];\n\n    // Proceed even if no trains, to clear data or show 0?\n    // Ideally we want to show 'No service' or just not update\n    if (allTrains.length === 0) {\n      continue;\n    }\n\n    // 1. Calculate minimum time to next train (for display)\n    const validTrains = allTrains.filter(t => t.valid === 'Y' && t.ttnt);\n    if (validTrains.length === 0) {\n      continue;\n    }\n\n    const ttntValues = validTrains.map(t => parseFloat(t.ttnt)).filter(v => !isNaN(v));\n    if (ttntValues.length === 0) {\n      continue;\n    }\n    \n    const minTtnt = Math.min(...ttntValues);\n\n    // 2. Frequency\n    const freqUp = calculateHeadway(upTrains);\n    const freqDown = calculateHeadway(downTrains);\n    \n    let effectiveFreq = minTtnt;\n    const validFreqs = [freqUp, freqDown].filter(f => f !== null);\n    \n    if (validFreqs.length > 0) {\n      effectiveFreq = Math.min(...validFreqs);\n    }\n    \n    // 3. Crowding\n    // Parse time (assuming 'YYYY-MM-DD HH:MM:SS')\n    const hour = parseInt(sysTimeStr.split(' ')[1].split(':')[0]);\n    const crowding = determineCrowding(effectiveFreq, hour, isDelay);\n\n    results.push({\n      json: {\n        station_code: stationCode,\n        line_code: lineCode,\n        timestamp: sysTimeStr.replace(' ', 'T') + '+08:00',\n        next_train_minutes: minTtnt,\n        train_frequency: effectiveFreq,\n        crowding_level: crowding,\n        is_delay: isDelay\n      }\n    });\n\n  } catch (e) {\n    continue;\n  }\n}\n\nreturn results;"
+      },
+      "name": "Process Train Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        300
+      ],
+      "id": "process-data",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mtr-prod.axs.ink/api/flow/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "station_code",
+              "value": "={{$json.station_code}}"
+            },
+            {
+              "name": "line_code",
+              "value": "={{$json.line_code}}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{$json.timestamp}}"
+            },
+            {
+              "name": "next_train_minutes",
+              "value": "={{$json.next_train_minutes}}"
+            },
+            {
+              "name": "train_frequency",
+              "value": "={{$json.train_frequency}}"
+            },
+            {
+              "name": "crowding_level",
+              "value": "={{$json.crowding_level}}"
+            },
+            {
+              "name": "is_delay",
+              "value": "={{$json.is_delay}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Insert to Backend API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1050,
+        300
+      ],
+      "id": "backend-insert",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log successful insertions\nconst items = $input.all();\nconst successful = items.filter(item => item.json.id);\nconst failed = items.length - successful.length;\n\nconsole.log(`Data collection complete: ${successful.length} successful, ${failed} failed`);\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    total: items.length,\n    successful: successful.length,\n    failed: failed\n  }\n};"
+      },
+      "name": "Log Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ],
+      "id": "log-results"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Define Stations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Stations": {
+      "main": [
+        [
+          {
+            "node": "MTR API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MTR API Request": {
+      "main": [
+        [
+          {
+            "node": "Process Train Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Train Data": {
+      "main": [
+        [
+          {
+            "node": "Insert to Backend API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert to Backend API": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

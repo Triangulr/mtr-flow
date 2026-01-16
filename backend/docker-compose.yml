@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend (connects to Supabase PostgreSQL)
+  backend:
+    image: axesys/mtr-backend:latest
+    container_name: mtr-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8005}:8000"
+    environment:
+      # Database Configuration (Supabase)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # API Configuration
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+
+      # External APIs
+      MTR_API_BASE_URL: ${MTR_API_BASE_URL:-https://rt.data.gov.hk/v1/transport/mtr}
+      TRAFFIC_API_URL: ${TRAFFIC_API_URL:-http://resource.data.one.gov.hk/td/traffic-detectors/irnAvgSpeed-all.xml}
+
+      # Supabase (Optional)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
