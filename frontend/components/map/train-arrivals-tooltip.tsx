@@ -1,7 +1,7 @@
 'use client';
 
 import { useTrainArrivals } from '@/hooks/use-train-arrivals';
-import { Clock, Loader2 } from 'lucide-react';
+import { Clock, Loader2, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TrainArrivalsTooltipProps {
@@ -10,6 +10,7 @@ interface TrainArrivalsTooltipProps {
   crowdingLevel?: 'low' | 'medium' | 'high';
   isInterchange?: boolean;
   isNonMTR?: boolean;
+  isServiceClosed?: boolean;
 }
 
 export function TrainArrivalsTooltip({
@@ -18,10 +19,11 @@ export function TrainArrivalsTooltip({
   crowdingLevel,
   isInterchange,
   isNonMTR = false,
+  isServiceClosed = false,
 }: TrainArrivalsTooltipProps) {
   const { data: trainsData, isLoading, error } = useTrainArrivals(
     stationCode,
-    !isNonMTR // Only fetch if it's an MTR station
+    !isNonMTR && !isServiceClosed // Only fetch if it's an MTR station and service is open
   );
 
   const getCrowdingBadgeColor = (level?: string) => {
@@ -47,7 +49,7 @@ export function TrainArrivalsTooltip({
             <p className="text-[10px] text-primary mt-0.5">Interchange Station</p>
           )}
         </div>
-        {crowdingLevel && (
+        {!isServiceClosed && crowdingLevel && (
           <div
             className={cn(
               'w-3 h-3 rounded-full',
@@ -58,8 +60,19 @@ export function TrainArrivalsTooltip({
         )}
       </div>
 
+      {/* Service Closed Message */}
+      {isServiceClosed && (
+        <div className="py-4 text-center">
+          <div className="flex justify-center mb-2">
+            <Moon className="w-6 h-6 text-slate-500" />
+          </div>
+          <p className="text-sm text-slate-300 font-medium">Service Inactive</p>
+          <p className="text-xs text-slate-500 mt-1">Real-time data resumes at 06:00</p>
+        </div>
+      )}
+
       {/* Non-MTR Station Message */}
-      {isNonMTR && (
+      {!isServiceClosed && isNonMTR && (
         <div className="py-4 text-center">
           <p className="text-sm text-amber-400 font-medium">Not part of MTR network</p>
           <p className="text-xs text-slate-500 mt-1">High-speed rail station</p>
@@ -67,20 +80,20 @@ export function TrainArrivalsTooltip({
       )}
 
       {/* Train Arrivals */}
-      {!isNonMTR && isLoading && (
+      {!isServiceClosed && !isNonMTR && isLoading && (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
           <span className="ml-2 text-sm text-slate-400">Loading trains...</span>
         </div>
       )}
 
-      {!isNonMTR && error && (
+      {!isServiceClosed && !isNonMTR && error && (
         <div className="py-4 text-center">
           <p className="text-sm text-slate-400">Unable to load train data</p>
         </div>
       )}
 
-      {!isNonMTR && trainsData && trainsData.lines && trainsData.lines.length > 0 && (
+      {!isServiceClosed && !isNonMTR && trainsData && trainsData.lines && trainsData.lines.length > 0 && (
         <div className="space-y-4">
           {trainsData.lines.map((line) => (
             <div key={line.line_code} className="space-y-2">
@@ -157,14 +170,14 @@ export function TrainArrivalsTooltip({
         </div>
       )}
 
-      {!isNonMTR && trainsData && (!trainsData.lines || trainsData.lines.length === 0) && (
+      {!isServiceClosed && !isNonMTR && trainsData && (!trainsData.lines || trainsData.lines.length === 0) && (
         <div className="py-4 text-center">
           <p className="text-sm text-slate-400">No train data available</p>
         </div>
       )}
 
       {/* Timestamp */}
-      {!isNonMTR && trainsData && trainsData.timestamp && (
+      {!isServiceClosed && !isNonMTR && trainsData && trainsData.timestamp && (
         <div className="mt-3 pt-3 border-t border-slate-700 text-[10px] text-slate-500 text-center">
           Updated: {new Date(trainsData.timestamp).toLocaleTimeString()}
         </div>

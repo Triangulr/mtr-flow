@@ -20,6 +20,7 @@ import {
 } from '@/lib/interchange-config';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { TrainArrivalsTooltip } from './train-arrivals-tooltip';
+import { useMTRStatus } from '@/hooks/use-mtr-status';
 
 interface SystemMapProps {
   stations: Station[];
@@ -228,6 +229,7 @@ export function SystemMap({ stations, flowDataMap }: SystemMapProps) {
   const router = useRouter();
   const [hoveredStation, setHoveredStation] = useState<string | null>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const { isClosed } = useMTRStatus();
 
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -235,6 +237,8 @@ export function SystemMap({ stations, flowDataMap }: SystemMapProps) {
 
   // Helper to get crowding color
   const getCrowdingColor = (code: string) => {
+    if (isClosed) return '#e5e7eb'; // Return grey if closed
+
     const data = flowDataMap.get(code);
     if (!data) return '#e5e7eb';
     switch (data.crowding_level) {
@@ -458,6 +462,7 @@ export function SystemMap({ stations, flowDataMap }: SystemMapProps) {
                         crowdingLevel={flowData?.crowding_level}
                         isInterchange={isInterchange}
                         isNonMTR={isNonMTR}
+                        isServiceClosed={isClosed}
                       />
                     </TooltipContent>
                   </Tooltip>
