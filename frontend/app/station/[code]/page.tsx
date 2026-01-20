@@ -150,7 +150,12 @@ export default function StationDetailPage() {
         time: formatHKTime(d.timestamp),
         frequency: d.train_frequency || 0,
         level: d.crowding_level,
-      })) || [];
+      }))
+      .filter((d) => {
+        // Filter out data between 1 AM and 6 AM (MTR off-hours)
+        const hour = parseInt(d.time.split(':')[0], 10);
+        return !(hour >= 1 && hour < 6);
+      }) || [];
 
   // Process predictions for chart
   const predictionChartData =
@@ -667,7 +672,10 @@ export default function StationDetailPage() {
                 <div className="h-64">
                   {chartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
+                      <AreaChart
+                        data={chartData}
+                        margin={{ top: 5, right: 0, left: -20, bottom: -5 }}
+                      >
                         <defs>
                           <linearGradient
                             id="frequencyGradient"
@@ -699,16 +707,10 @@ export default function StationDetailPage() {
                           tickLine={false}
                         />
                         <YAxis
+                          width={40}
                           tick={{ fontSize: 11, fill: 'hsl(215 20% 55%)' }}
                           axisLine={{ stroke: 'hsl(222 47% 15%)' }}
                           tickLine={false}
-                          label={{
-                            value: 'Minutes',
-                            angle: -90,
-                            position: 'insideLeft',
-                            fill: 'hsl(215 20% 55%)',
-                            fontSize: 11,
-                          }}
                         />
                         <Tooltip
                           content={({ active, payload }) => {

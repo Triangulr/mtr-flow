@@ -10,15 +10,15 @@ if ! docker buildx version > /dev/null 2>&1; then
     exit 1
 fi
 
-echo "🚀 Building and pushing multi-arch image for $IMAGE_NAME:$TAG..."
-echo "Target platforms: linux/amd64,linux/arm64"
+echo "🚀 Building and pushing image for $IMAGE_NAME:$TAG..."
+echo "Target platform: linux/amd64"
 
 # Create a new builder instance if one doesn't exist (optional but good for isolation)
 # docker buildx create --use --name mtr-builder || docker buildx use mtr-builder
 
 # Build and push
 docker buildx build \
-  --platform linux/amd64,linux/arm64 \
+  --platform linux/amd64 \
   --tag "$IMAGE_NAME:$TAG" \
   --push \
   .
