@@ -26,6 +26,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  ReferenceLine,
 } from 'recharts';
 import { stationsApi, flowDataApi, predictionsApi, type Prediction } from '@/lib/api';
 import { useTrainArrivals } from '@/hooks/use-train-arrivals';
@@ -36,6 +37,14 @@ import { ServiceStatusBanner } from '@/components/dashboard/service-status-banne
 import { CrowdingBadge } from '@/components/dashboard/crowding-badge';
 import { LiveIndicator } from '@/components/dashboard/live-indicator';
 import { cn, formatHKTime } from '@/lib/utils';
+import { useMemo } from 'react';
+
+type ChartDataPoint = {
+  time: string;
+  frequency: number | null;
+  level: string | null;
+  isGap: boolean;
+};
 
 const lineColors: Record<string, string> = {
   'Island Line': '#0071CE',
@@ -142,20 +151,44 @@ export default function StationDetailPage() {
   const { data: trainsData, isLoading: trainsLoading, error: trainsError } = useTrainArrivals(stationCode, true);
 
   // Process historical data for chart
-  const chartData =
-    historicalData
-      ?.slice()
-      .reverse()
-      .map((d) => ({
-        time: formatHKTime(d.timestamp),
+  const chartData = useMemo(() => {
+    if (!historicalData) return [];
+
+    const sorted = historicalData.slice().reverse();
+    const processed: ChartDataPoint[] = [];
+    let lastTime: number | null = null;
+
+    sorted.forEach((d) => {
+      const timeStr = formatHKTime(d.timestamp);
+      const hour = parseInt(timeStr.split(':')[0], 10);
+
+      // Filter out data between 1 AM and 6 AM (MTR off-hours)
+      if (hour >= 1 && hour < 6) return;
+
+      const currentTime = new Date(d.timestamp).getTime();
+
+      // Check for gap (> 90 minutes to be safe)
+      if (lastTime && currentTime - lastTime > 90 * 60 * 1000) {
+        processed.push({
+          time: 'Off Hours',
+          frequency: null,
+          level: null,
+          isGap: true,
+        });
+      }
+
+      processed.push({
+        time: timeStr,
         frequency: d.train_frequency || 0,
-        level: d.crowding_level,
-      }))
-      .filter((d) => {
-        // Filter out data between 1 AM and 6 AM (MTR off-hours)
-        const hour = parseInt(d.time.split(':')[0], 10);
-        return !(hour >= 1 && hour < 6);
-      }) || [];
+        level: d.crowding_level || null,
+        isGap: false,
+      });
+
+      lastTime = currentTime;
+    });
+
+    return processed;
+  }, [historicalData]);
 
   // Process predictions for chart
   const predictionChartData =
@@ -716,6 +749,8 @@ export default function StationDetailPage() {
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               const data = payload[0].payload;
+                              if (data.isGap) return null;
+                              
                               return (
                                 <div className="glass-card rounded-lg px-4 py-3">
                                   <p className="text-sm text-foreground font-medium">
@@ -750,7 +785,21 @@ export default function StationDetailPage() {
                           stroke="hsl(185 100% 50%)"
                           strokeWidth={2}
                           fill="url(#frequencyGradient)"
+                          connectNulls={false}
                         />
+                        {chartData.some((d) => d.isGap) && (
+                          <ReferenceLine
+                            x="Off Hours"
+                            stroke="hsl(215 20% 55%)"
+                            strokeDasharray="3 3"
+                            label={{
+                              value: 'MTR Closed',
+                              position: 'insideTop',
+                              fill: 'hsl(215 20% 55%)',
+                              fontSize: 10,
+                            }}
+                          />
+                        )}
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
