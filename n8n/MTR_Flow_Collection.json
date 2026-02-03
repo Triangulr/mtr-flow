@@ -134,6 +134,64 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://mtr-api.axs.ink/api/training-flow/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "station_code",
+              "value": "={{$json.station_code}}"
+            },
+            {
+              "name": "line_code",
+              "value": "={{$json.line_code}}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{$json.timestamp}}"
+            },
+            {
+              "name": "next_train_minutes",
+              "value": "={{$json.next_train_minutes}}"
+            },
+            {
+              "name": "train_frequency",
+              "value": "={{$json.train_frequency}}"
+            },
+            {
+              "name": "crowding_level",
+              "value": "={{$json.crowding_level}}"
+            },
+            {
+              "name": "is_delay",
+              "value": "={{$json.is_delay}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Insert to Training API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1050,
+        520
+      ],
+      "id": "training-insert",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
         "jsCode": "// Log successful insertions\nconst items = $input.all();\nconst successful = items.filter(item => item.json.id);\nconst failed = items.length - successful.length;\n\nconsole.log(`Data collection complete: ${successful.length} successful, ${failed} failed`);\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    total: items.length,\n    successful: successful.length,\n    failed: failed\n  }\n};"
       },
       "name": "Log Results",
@@ -185,6 +243,11 @@
         [
           {
             "node": "Insert to Backend API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert to Training API",
             "type": "main",
             "index": 0
           }

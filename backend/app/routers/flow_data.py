@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.db.database import get_supabase
 from app.models import schemas
 from app.ml.crowding import classify_crowding
@@ -15,21 +15,65 @@ def cleanup_old_data(hours: int = 24, supabase: Client = Depends(get_supabase)):
     if not supabase:
         raise HTTPException(status_code=503, detail="Database connection unavailable")
 
-    cutoff_time = datetime.now() - timedelta(hours=hours)
-    
-    # Delete records older than cutoff_time
-    response = (
-        supabase.table("flow_data")
-        .delete()
-        .lt("timestamp", cutoff_time.isoformat())
-        .execute()
-    )
+    # Use timezone-aware UTC datetime to match database column
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
 
-    return {
-        "message": f"Cleanup complete",
-        "deleted_count": len(response.data) if response.data else 0,
-        "cutoff_time": cutoff_time.isoformat()
-    }
+    try:
+        # Use RPC call to execute a more efficient server-side deletion
+        # This avoids timeout issues with large datasets
+        result = supabase.rpc(
+            'delete_old_flow_data',
+            {'cutoff_timestamp': cutoff_time.isoformat()}
+        ).execute()
+
+        deleted_count = result.data if result.data else 0
+
+        return {
+            "message": f"Cleanup complete",
+            "deleted_count": deleted_count,
+            "cutoff_time": cutoff_time.isoformat()
+        }
+    except Exception as e:
+        # Fallback: If RPC doesn't exist, try direct deletion with limit
+        # This is less efficient but works as a backup
+        try:
+            # Delete in smaller batches to avoid timeout
+            total_deleted = 0
+            batch_size = 1000
+
+            while True:
+                # Get batch of IDs to delete
+                batch_response = (
+                    supabase.table("flow_data")
+                    .select("id")
+                    .lt("timestamp", cutoff_time.isoformat())
+                    .limit(batch_size)
+                    .execute()
+                )
+
+                if not batch_response.data or len(batch_response.data) == 0:
+                    break
+
+                # Delete this batch
+                ids_to_delete = [row['id'] for row in batch_response.data]
+                supabase.table("flow_data").delete().in_("id", ids_to_delete).execute()
+
+                total_deleted += len(ids_to_delete)
+
+                # If we got less than batch_size, we're done
+                if len(batch_response.data) < batch_size:
+                    break
+
+            return {
+                "message": f"Cleanup complete (batched)",
+                "deleted_count": total_deleted,
+                "cutoff_time": cutoff_time.isoformat()
+            }
+        except Exception as batch_error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Cleanup failed: {str(batch_error)}"
+            )
 
 @router.get("/", response_model=List[schemas.FlowDataResponse])
 def get_flow_data(
