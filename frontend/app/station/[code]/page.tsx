@@ -34,6 +34,7 @@ import { useMTRStatus } from '@/hooks/use-mtr-status';
 import { GridBackground } from '@/components/effects/grid-background';
 import { Header } from '@/components/dashboard/header';
 import { ServiceStatusBanner } from '@/components/dashboard/service-status-banner';
+import { UnderDevelopmentBanner } from '@/components/dashboard/under-development-banner';
 import { CrowdingBadge } from '@/components/dashboard/crowding-badge';
 import { LiveIndicator } from '@/components/dashboard/live-indicator';
 import { cn, formatHKTime } from '@/lib/utils';
@@ -271,10 +272,12 @@ export default function StationDetailPage() {
     <div className="min-h-screen">
       <GridBackground />
       <Header />
-      
+
       <AnimatePresence>
         {isClosed && <ServiceStatusBanner />}
       </AnimatePresence>
+
+      <UnderDevelopmentBanner message="24-hour crowding predictions are under development. Prediction data shown is simulated for demonstration purposes." />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}

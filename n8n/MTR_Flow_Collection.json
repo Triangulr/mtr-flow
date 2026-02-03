@@ -77,7 +77,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://mtr-prod.axs.ink/api/flow/",
+        "url": "https://mtr-api.axs.ink/api/flow/",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

@@ -24,7 +24,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "https://mtr-prod.axs.ink/api/flow/cleanup",
+        "url": "https://mtr-api.axs.ink/api/flow/cleanup",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [

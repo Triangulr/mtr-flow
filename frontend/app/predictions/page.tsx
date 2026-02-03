@@ -21,6 +21,7 @@ import {
 import { stationsApi, type Station } from '@/lib/api';
 import { GridBackground } from '@/components/effects/grid-background';
 import { Header } from '@/components/dashboard/header';
+import { UnderDevelopmentBanner } from '@/components/dashboard/under-development-banner';
 import Link from 'next/link';
 import { formatHKTime } from '@/lib/utils';
 
@@ -99,6 +100,7 @@ export default function PredictionsPage() {
     <div className="min-h-screen">
       <GridBackground />
       <Header />
+      <UnderDevelopmentBanner message="Crowding predictions are currently under development. The ML model is being trained and data shown is simulated." />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

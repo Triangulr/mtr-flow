@@ -9,7 +9,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Next.js dev server
-        "https://mtr-prod.axs.ink",  # Production frontend (if same domain)
+        "https://mtr-api.axs.ink",  # Production API domain
         "*"  # Allow all origins for production API
     ],
     allow_credentials=True,

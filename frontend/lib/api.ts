@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { STATIONS } from './data';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mtr-prod.axs.ink/';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mtr-api.axs.ink';
 
 export const api = axios.create({
   baseURL: API_URL,
